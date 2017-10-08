@@ -4,9 +4,17 @@ module Choques1(
     input [9:0]Posicion_X_Bola,
     input [8:0]Posicion_Y_Bola,
     
-    output Choque
+    input [9:0]Posicion_X_Enem,
+    input [8:0]Posicion_Y_Enem,
+    
+    output reset,
+    output Reset_Enem
     );
     
+      wire Choque;
+      reg Reset;
+      reg Reset_Enem_reg;
+      
       localparam IN_AR = 143;
       localparam IN_AB = 269;
       localparam PRI_AR = 168;
@@ -20,8 +28,59 @@ module Choques1(
       localparam MET_I = 552;
       localparam MET_D = 567;
       
-      assign Choque = (Posicion_Y_Bola <= IN_AR || Posicion_X_Bola <= IN_I || ((Posicion_X_Bola + 10) >= IN_D && Posicion_Y_Bola <= PRI_AR) || 
-                      ((Posicion_X_Bola + 10) >= IN_D && (Posicion_Y_Bola + 10) >= PRI_AB && Posicion_X_Bola <= SEG_I) || 
-                      ((Posicion_Y_Bola + 10) >= IN_AB && Posicion_X_Bola <= SEG_I) || ((Posicion_X_Bola + 10) >= SEG_D && Posicion_Y_Bola <= TER_AR) || 
-                      (Posicion_Y_Bola + 10) >= TER_AB || (Posicion_X_Bola + 10) >= MET_D);
+
+       always @* begin
+           if ( ((Posicion_X_Bola >= Posicion_X_Enem) && (Posicion_X_Bola <= Posicion_X_Enem + 10) && 
+                (Posicion_Y_Bola >= Posicion_Y_Enem) && (Posicion_Y_Bola <= Posicion_Y_Enem + 10) ||
+                  
+               (Posicion_X_Bola + 10 >= Posicion_X_Enem) && (Posicion_X_Bola + 10 <= Posicion_X_Enem + 10) && 
+               (Posicion_Y_Bola >= Posicion_Y_Enem) && (Posicion_Y_Bola <= Posicion_Y_Enem + 10) ||
+                                     
+               (Posicion_X_Bola >= Posicion_X_Enem) && (Posicion_X_Bola <= Posicion_X_Enem + 10) && 
+               (Posicion_Y_Bola + 10 >= Posicion_Y_Enem) && (Posicion_Y_Bola + 10 <= Posicion_Y_Enem + 10)  ||
+               
+               (Posicion_X_Bola + 10 >= Posicion_X_Enem) && (Posicion_X_Bola + 10 <= Posicion_X_Enem + 10) && 
+               (Posicion_Y_Bola + 10 >= Posicion_Y_Enem) && (Posicion_Y_Bola + 10 <= Posicion_Y_Enem + 10)) ||
+           
+           
+              ((Posicion_Y_Bola <= IN_AR || Posicion_X_Bola <= IN_I || ((Posicion_X_Bola + 10) >= IN_D && Posicion_Y_Bola <= PRI_AR) || 
+              ((Posicion_X_Bola + 10) >= IN_D && (Posicion_Y_Bola + 10) >= PRI_AB && Posicion_X_Bola <= SEG_I)                       || 
+              ((Posicion_Y_Bola + 10) >= IN_AB && Posicion_X_Bola <= SEG_I) || ((Posicion_X_Bola + 10) >= SEG_D && Posicion_Y_Bola <= TER_AR) || 
+              (Posicion_Y_Bola + 10) >= TER_AB || (Posicion_X_Bola + 10) >= MET_D)))
+              
+
+              
+            
+                Reset <= 1'b1;
+           else begin
+                Reset <= 1'b0;
+           end
+           
+           
+           if((Posicion_X_Enem + 10 == SEG_D) || 
+           
+           ((Posicion_X_Bola >= Posicion_X_Enem) && (Posicion_X_Bola <= Posicion_X_Enem + 10) && 
+           (Posicion_Y_Bola >= Posicion_Y_Enem) && (Posicion_Y_Bola <= Posicion_Y_Enem + 10)) ||
+                      
+           (Posicion_X_Bola + 10 >= Posicion_X_Enem) && (Posicion_X_Bola + 10 <= Posicion_X_Enem + 10) && 
+           (Posicion_Y_Bola >= Posicion_Y_Enem) && (Posicion_Y_Bola <= Posicion_Y_Enem + 10) ||
+                                 
+           (Posicion_X_Bola >= Posicion_X_Enem) && (Posicion_X_Bola <= Posicion_X_Enem + 10) && 
+           (Posicion_Y_Bola + 10 >= Posicion_Y_Enem) && (Posicion_Y_Bola + 10 <= Posicion_Y_Enem + 10)  ||
+           
+           (Posicion_X_Bola + 10 >= Posicion_X_Enem) && (Posicion_X_Bola + 10 <= Posicion_X_Enem + 10) && 
+           (Posicion_Y_Bola + 10 >= Posicion_Y_Enem) && (Posicion_Y_Bola + 10 <= Posicion_Y_Enem + 10))
+           begin
+                Reset_Enem_reg <= 1'b1;
+           end
+           else begin
+                Reset_Enem_reg <= 1'b0;
+           end
+           
+           
+       end
+       
+       assign reset = Reset;
+       assign Reset_Enem = Reset_Enem_reg;
 endmodule
+
