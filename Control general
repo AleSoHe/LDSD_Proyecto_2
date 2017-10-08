@@ -1,0 +1,254 @@
+`timescale 1ns / 1ps
+
+module Control_General(
+    input [2:0] MOV,
+    input [9:0] Pix_X,
+    input [8:0] Pix_Y,
+    input [2:0] Botones,
+    input CLK,
+    
+    output [2:0] RGB                           
+    );
+
+    wire Lab_ON_Cbl;                    //
+    wire Borde_ON_Cbl;                  //
+    wire Meta_ON_Cbl;                   //
+                                        //
+    wire CS_N1_Cbl;                     //
+    wire CS_N2_Cbl;                     //
+    wire CS_N3_Cbl;                     // 
+    wire CS_Menu_Cbl;                   // 
+    
+    wire [2:0] RGB_menu;
+    wire [2:0] RGB_Demas;
+    
+    wire META1;
+    wire PERDIO1;
+    
+    wire META2;
+    wire PERDIO2;
+        
+    wire META3;
+    wire PERDIO3;
+    
+    wire [2:0] seleccion;
+
+
+//////////////////////////////////////////
+//              LABERINTOS              //
+////////////////////////////////////////// 
+                                        //
+                                        //
+    Laberintos Laberintos_INST(         //
+        .pixel_x(Pix_X),                //      //INPUTS//
+        .pixel_y(Pix_Y),                //
+        .CS1(CS_N1_Cbl),                //         
+        .CS2(CS_N2_Cbl),                //        
+        .CS3(CS_N3_Cbl),                //      
+                                        //
+        .Borde_on(Borde_ON_Cbl),        //      //OUTPUTS//
+        .Lab_on(Lab_ON_Cbl),            //
+        .Meta_on(Meta_ON_Cbl)           //
+    );                                  // 
+                                        //
+////////////////////////////////////////// 
+    
+
+
+//////////////////////////////////////////
+//                MENU                  //
+////////////////////////////////////////// 
+                                        //
+    menu Menu_INST(                     //
+        .boton(Botones),                //    
+        .pixel_x(Pix_X),                //
+        .pixel_y(Pix_Y),                //
+        .CS(CS_Menu_Cbl),               //      
+        .clk(CLK),                      //
+                                        //
+        .RGB(RGB_menu),                 //               
+        .CTRL(seleccion)                //      
+                                        //
+    );                                  //
+                                        //
+////////////////////////////////////////// 
+    
+//////////////////////////////////////////
+//                NIVEL 1               //
+//////////////////////////////////////////
+                                        //
+    wire Bola1_ON_Cbl;                   //     
+    wire Enem1_ON_Cbl;                   //     
+    wire Vidas1_ON_Cbl;                  //
+                                        //                                    
+    Nivel_1 Nivel_1_INST(               //
+        .MOV(MOV),                      //      //INPUTS//  
+        .Pix_X(Pix_X),                  //
+        .Pix_Y(Pix_Y),                  //
+        .CLK(CLK),                      //
+        .CS(CS_N1_Cbl),                 //
+                                        //
+        .Bola_ON(Bola1_ON_Cbl),          //      //OUTPUTS//
+        .Enemigos_ON(Enem1_ON_Cbl),      //
+        .Vidas_ON(Vidas1_ON_Cbl),        //
+        .Meta(META1),                   //     
+        .Perdio(PERDIO1)                //       
+                                        //
+    );                                  //
+                                        //
+////////////////////////////////////////// 
+
+//////////////////////////////////////////
+//                NIVEL 2               //
+//////////////////////////////////////////
+                                        //
+    wire Bola2_ON_Cbl;                   //     
+    wire Enem2_ON_Cbl;                   //     
+    wire Vidas2_ON_Cbl;                  //
+                                        //                                    
+    Nivel_2 Nivel_2_INST(               //
+        .MOV(MOV),                      //      //INPUTS//  
+        .Pix_X(Pix_X),                  //
+        .Pix_Y(Pix_Y),                  //
+        .CLK(CLK),                      //
+        .CS(CS_N2_Cbl),                 //
+                                        //
+        .Bola_ON(Bola2_ON_Cbl),          //      //OUTPUTS//
+        .Enemigos_ON(Enem2_ON_Cbl),      //
+        .Vidas_ON(Vidas2_ON_Cbl),        //
+        .Meta(META2),                   //     
+        .Perdio(PERDIO2)                //       
+                                        //
+    );                                  //
+                                        //
+////////////////////////////////////////// 
+
+//////////////////////////////////////////
+//                NIVEL 3               //
+//////////////////////////////////////////
+                                        //
+    wire Bola3_ON_Cbl;                   //     
+    wire Enem3_ON_Cbl;                   //     
+    wire Vidas3_ON_Cbl;                  //
+                                        //                                    
+    Nivel_3 Nivel_3_INST(               //
+        .MOV(MOV),                      //      //INPUTS//  
+        .Pix_X(Pix_X),                  //
+        .Pix_Y(Pix_Y),                  //
+        .CLK(CLK),                      //
+        .CS(CS_N3_Cbl),                 //
+                                        //
+        .Bola_ON(Bola3_ON_Cbl),          //      //OUTPUTS//
+        .Enemigos_ON(Enem3_ON_Cbl),      //
+        .Vidas_ON(Vidas3_ON_Cbl),        //
+        .Meta(META3),                   //     
+        .Perdio(PERDIO3)                //       
+                                        //
+    );                                  //
+                                        //
+////////////////////////////////////////// 
+
+///////////////////////////////////////////
+//           CTRL de seleccion           //
+///////////////////////////////////////////
+                                         //
+CTRL_Selec CTRL_Selec_INS(               //     
+    .clk(CLK),                           //
+    .gano1(META1),                       //
+    .gano2(META2),                       //
+    .gano3(META3),                       //
+    .perdio1(PERDIO1),                   //
+    .perdio2(PERDIO2),                   //
+    .perdio3(PERDIO3),                   //
+    .nivel(seleccion),                     //
+                                         //
+    .CS_menu(CS_Menu_Cbl),               //
+    .CS_nivel1(CS_N1_Cbl),               //
+    .CS_nivel2(CS_N2_Cbl),               //
+    .CS_nivel3(CS_N3_Cbl)                //
+    );                                   //
+                                         //
+///////////////////////////////////////////  
+
+
+//////////////////////////////////////////
+////     MULTIPLEXOR DE GRAFICOS     /////
+//////////////////////////////////////////
+
+    reg Bola_ON_Reg;
+    reg Enem_ON_Reg;
+    reg Vidas_ON_Reg;                   //
+    
+    wire Bola_ON_Cbl;
+    wire Enem_ON_Cbl;
+    wire Vidas_ON_Cbl;
+                                        //
+always @*                               //
+begin                                   //
+    if (CS_N1_Cbl)
+    begin                      //
+        Bola_ON_Reg <= Bola1_ON_Cbl;    //
+        Enem_ON_Reg <= Enem1_ON_Cbl;    //
+        Vidas_ON_Reg <= Vidas1_ON_Cbl;  //
+    end
+    else if (CS_N2_Cbl)                 //
+    begin
+        Bola_ON_Reg <= Bola2_ON_Cbl;    //
+        Enem_ON_Reg <= Enem2_ON_Cbl;    //
+        Vidas_ON_Reg <= Vidas2_ON_Cbl;  // 
+    end
+    else if (CS_N3_Cbl)                 //
+    begin
+        Bola_ON_Reg <= Bola3_ON_Cbl;    //
+        Enem_ON_Reg <= Enem3_ON_Cbl;    //
+        Vidas_ON_Reg <= Vidas3_ON_Cbl;  // 
+    end        
+end                                     //
+                                        //
+    assign Bola_ON_Cbl = Bola_ON_Reg;
+    assign Enem_ON_Cbl = Enem_ON_Reg;
+    assign Vidas_ON_Cbl = Vidas_ON_Reg; //
+                                        //
+//////////////////////////////////////////                                           
+    
+//////////////////////////////////////////
+//                DISPLAY               //
+//////////////////////////////////////////
+                                        //     
+                                        //
+                                        //     
+    Graficos Graficos_INS(                //
+        .Bola_ON(Bola_ON_Cbl),          //      //INPUTS//
+        .Lab_ON(Lab_ON_Cbl),            //
+        .Enem_ON(Enem_ON_Cbl),          //
+        .Vidas_ON(Vidas_ON_Cbl),        //
+        .Borde_ON(Borde_ON_Cbl),        //
+        .Meta_ON(Meta_ON_Cbl),          //
+        
+        .pixel_x(Pix_X),                //
+        .pixel_y(Pix_Y),                //                            
+        .rgb(RGB_Demas)                 //      //OUTPUTS// 
+    );                                  //
+                                        //
+////////////////////////////////////////// 
+
+//////////////////////////////////////////
+////       MULTIPLEXOR DE RGB        /////
+//////////////////////////////////////////
+                                        //
+reg [2:0] RGB_reg;                      //
+                                        //
+always @*                               //
+begin                                   //
+    if (CS_Menu_Cbl)                    //
+        RGB_reg <= RGB_Demas;           //
+    else                                //
+        RGB_reg <= RGB_menu;            //
+end                                     //
+                                        //
+assign RGB = RGB_reg;                   //
+                                        //
+//////////////////////////////////////////
+
+
+endmodule
