@@ -1,0 +1,77 @@
+`timescale 1ns / 1ps
+
+module Vidas(
+    input CS,
+    input Choque,
+    input [9:0] pix_x,
+    input [8:0] pix_y,
+    
+    output reg Vidas_ON,
+    output reg Perdio
+    );
+    
+    wire [2:0] fila;
+    reg [7:0] filax;
+    wire [2:0] col;
+    wire bit_ON;
+    wire cora_ON1;
+    wire cora_ON2;
+    wire cora_ON3;
+    
+    reg [1:0] cont_reg;
+    
+   assign cora_ON1 = (pix_x[9:5] == 15) && (pix_y[8:5] == 1);
+   assign cora_ON2 = (pix_x[9:5] == 16) && (pix_y[8:5] == 1);
+   assign cora_ON3 = (pix_x[9:5] == 17) && (pix_y[8:5] == 1);
+   
+    assign fila = pix_y[4:2];
+    assign col = pix_x[4:2];  
+    assign bit_ON = filax [col];
+    
+     always @*
+     case (fila)
+         3'd0: filax = 8'b01101100; //  * *
+         3'd1: filax = 8'b11111110; // ***
+         3'd2: filax = 8'b11111110; // ***
+         3'd3: filax = 8'b11111110; // ***
+         3'd4: filax = 8'b01111100; //  ***
+         3'd5: filax = 8'b00111000; //   *
+         3'd6: filax = 8'b00010000; //    *
+         default: filax = 8'b00000000;
+     endcase
+     
+     always @*
+     begin
+         if (cora_ON1 && cont_reg >= 2'd1)
+             Vidas_ON <= (cora_ON1 && bit_ON);
+               
+         else if (cora_ON2 && cont_reg >= 2'd2)
+             Vidas_ON <= (cora_ON2 && bit_ON);
+             
+         else if (cora_ON3 && cont_reg == 2'd3)
+             Vidas_ON <= (cora_ON3 && bit_ON);
+         else
+             Vidas_ON <= 1'b0;
+     end
+     
+
+    always @(posedge Choque, posedge CS)
+    begin
+          if (CS)
+          begin
+              cont_reg = 2'd3;
+              Perdio = 1'd0;
+          end
+          else
+          begin
+              if (cont_reg == 2'b1)
+              begin
+                 Perdio = 1'd1;
+                 cont_reg = 2'd0;
+              end
+              else
+                 cont_reg = cont_reg - 1'd1;
+          end
+     end
+     
+endmodule
