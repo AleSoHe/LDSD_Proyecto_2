@@ -1,0 +1,104 @@
+`timescale 1ns / 1ps
+
+module top(
+    input clk,
+    input MISO,
+    output MOSI,
+    output SCLK,
+    output CSN,
+    output h_sync,
+    output v_sync,
+    output [2:0] RGB
+    );
+    
+    wire clk50;
+    
+//////////////////////////////////////////////////
+////     Divisor de Frecuencia a 50MHz      //////
+//////////////////////////////////////////////////    
+                                                //
+    Divisor_Frecuencia Divisor_Frecuencia(      //
+        .clk(clk),                              //
+                                                //
+        .out_clk(clk50)                         //
+        );                                      //                    
+                                                //
+//////////////////////////////////////////////////
+
+    wire video_on;
+    wire p_tick;
+    wire [9:0] pixel_x;
+    wire [8:0] pixel_y;
+
+//////////////////////////////////////////////////
+////      Sincronización del display        //////
+////////////////////////////////////////////////// 
+                                                // 
+    vga_sync vga_sync(                          //
+        .clk(clk50),                            //
+        .reset(0),                              //
+                                                //
+        .hsync(h_sync),                         //
+        .vsync(v_sync),                         //
+        .video_on(video_on),                    //
+        .p_tick(p_tick),                        //
+        .pixel_x(pixel_x),                      //
+        .pixel_y(pixel_y)                       //
+        );                                      //
+                                                //
+//////////////////////////////////////////////////
+
+    wire [7:0] acel_x;
+    wire [7:0] acel_y;
+
+//////////////////////////////////////////////////
+////      Controlador del acelerómetro      //////
+//////////////////////////////////////////////////
+                                                //
+    ADXL362_controller Acelerometro(            //
+        .clk(clk50),                            //
+        .MISO(MISO),                            //
+        .INT1(),                                //
+        .INT2(),                                //
+        .MOSI(MOSI),                            //
+        .CSN(CSN),                              //
+        .SCLK(SCLK),                            //
+        .datosX(acel_y),                        //
+        .datosY(acel_x)                         //
+        );                                      //
+                                                //
+////////////////////////////////////////////////// 
+
+wire [2:0] movimiento;
+
+//////////////////////////////////////////////////
+////      Decodificador de movimiento       //////
+//////////////////////////////////////////////////
+                                                //
+    Movimiento Movimiento(                      //
+        .clk(clk50),                            //  INPUTS
+        .acel_x(acel_x[6:0]),                   //    
+        .acel_y(acel_y[6:0]),                   //
+                                                //
+        .mov(movimiento)                        //  OUTPUTS
+        );                                      //
+                                                //
+//////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////
+////        Control general del juego       //////
+//////////////////////////////////////////////////
+                                                //
+    Control_General Control_General(            //
+        .clk(clk50),                                 //
+        .pixel_x(pixel_x),                      //
+        .pixel_y(pixel_y),                      //
+        .mov(movimiento),                              //
+        .RGB(RGB)                               //
+        );                                      //
+                                                //
+//////////////////////////////////////////////////
+
+
+endmodule
