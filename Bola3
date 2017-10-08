@@ -1,0 +1,83 @@
+`timescale 1ns / 1ps
+
+module Bola3(
+    input [2:0] MOV,
+    input [9:0]Pix_X,
+    input [8:0]Pix_Y,
+    input Reset,
+    input CS,
+   
+    output reg Bola_ON,
+    output reg [9:0]Posicion_X ,
+    output reg [8:0]Posicion_Y
+    );
+
+
+//////////////////////////////////////////////////////////////
+/////////////      MOVIMIENTO DE BOLA       //////////////////
+//////////////////////////////////////////////////////////////
+
+wire refr_tick;
+
+assign refr_tick = (Pix_Y==481) && (Pix_X==0);
+            
+always @(posedge refr_tick) begin                                   
+       if(CS || Reset) begin
+            Posicion_X <= 117;                              
+            Posicion_Y <= 161;                             
+        end                                           
+        else if(~CS) 
+        begin                                                       
+                case(MOV)                                   //
+                    3'b000:                                 //
+                            Posicion_Y <= Posicion_Y - 1'd1;//
+                    3'b001:                                 //
+                            Posicion_Y <= Posicion_Y + 1'd1;//
+                    3'b010:                                 //     
+                            Posicion_X <= Posicion_X - 1'd1;//
+                    3'b011:                                 //
+                            Posicion_X <= Posicion_X + 1'd1;//
+                    3'b100:                                 //
+                        begin                               //
+                            Posicion_X <= Posicion_X - 1'd1;//
+                            Posicion_Y <= Posicion_Y - 1'd1;//
+                        end                                 //
+                    3'b101:                                 //
+                        begin                               //
+                            Posicion_X <= Posicion_X + 1'd1;//
+                            Posicion_Y <= Posicion_Y - 1'd1;//
+                        end                                 // 
+                    3'b110:                                 //
+                        begin                               //
+                            Posicion_X <= Posicion_X - 1'd1;//
+                            Posicion_Y <= Posicion_Y + 1'd1;//
+                        end                                 //
+                    3'b111:                                 //
+                        begin                               //
+                            Posicion_X <= Posicion_X + 1'd1;//
+                            Posicion_Y <= Posicion_Y + 1'd1;//    
+                        end                                 //
+                   endcase                                  //
+              end                                           //    
+     end                                                    //    
+                                                            //
+//////////////////////////////////////////////////////////////    
+
+
+//////////////////////////////////////////////////////////
+///////////                   POSICION    ////////////////
+//////////////////////////////////////////////////////////
+
+always @ *
+    begin
+        if((Pix_X >= Posicion_X && Pix_X <= Posicion_X + 4'd10) 
+        && (Pix_Y >= Posicion_Y && Pix_Y <= Posicion_Y + 4'd10))
+            begin
+                Bola_ON <= 1'd1;
+            end
+        else 
+            Bola_ON <= 1'd0;
+    end
+       
+       
+endmodule
