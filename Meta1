@@ -1,0 +1,12 @@
+`timescale 1ns / 1ps
+
+module Meta1(
+    input [9:0] Posicion_X_Bola,
+    input [8:0] Posicion_Y_Bola,
+    
+    output Meta
+    );
+    
+    assign Meta = (( Posicion_X_Bola >= 559 &&  Posicion_X_Bola <= 567) && (Posicion_Y_Bola >= 287 && Posicion_Y_Bola <= 337));
+
+endmodule
