@@ -1,0 +1,41 @@
+`timescale 1ns / 1ps
+
+module Graficos(
+    input Bola_ON,
+    input Lab_ON,
+    input Enem_ON,
+    input Vidas_ON,
+    input Borde_ON,
+    input Meta_ON,
+    
+    input [9:0] pixel_x,
+    input [8:0] pixel_y,
+    
+    output reg [2:0] rgb
+    );
+    
+    always @*
+    begin
+        if (Bola_ON)
+            rgb = 3'b000;
+        else if (Enem_ON)
+            rgb = 3'b011;
+        else if (Borde_ON)
+        begin
+           if (pixel_x[0] && pixel_y[0])
+                rgb <= 3'b110;
+           else 
+                rgb <= 3'b000;
+        end
+        else if (Vidas_ON)
+                rgb = 3'b001;
+        else if (Lab_ON)
+             rgb <= 3'b111;
+        else if (Meta_ON)
+             rgb <= 3'b010;
+        else 
+             rgb <= 3'b000;                    
+    end
+    
+                            
+endmodule
