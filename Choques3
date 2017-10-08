@@ -1,0 +1,61 @@
+`timescale 1ns / 1ps
+
+module Choques3(
+    input [9:0]Posicion_X_Bola,
+    input [8:0]Posicion_Y_Bola,
+    
+    output Choque
+    );
+    
+        localparam x1 = 67;
+        localparam x2 = 117;
+        localparam x3 = 122;
+        localparam x4 = 172;
+        localparam x5 = 239;
+        localparam x6 = 274;
+        localparam x7 = 305;
+        localparam x8 = 320;
+        localparam x9 = 355;
+        localparam x10 = 395;
+        localparam x11 = 430;
+        localparam x12 = 462;
+        localparam x13 = 497;
+        localparam x14 = 537;
+        localparam x15 = 572;
+        
+        localparam y1 = 68;
+        localparam y2 = 103;
+        localparam y3 = 118;
+        localparam y4 = 153;
+        localparam y5 = 153;
+        localparam y6 = 220;
+        localparam y7 = 255;
+        localparam y8 = 270;
+        localparam y9 = 305;
+        localparam y10 = 335;
+        localparam y11 = 360;
+        localparam y12 = 205;
+        localparam y13 = 235;
+        localparam y14 = 395;
+        
+        localparam yM1 = 143;
+        localparam yM2 = 128;
+        
+        
+        assign Choque = ((Posicion_X_Bola <= x1) || (Posicion_X_Bola >= x15-10) || (Posicion_Y_Bola <= y1) || (Posicion_Y_Bola >= y14-10) ||
+                    (Posicion_Y_Bola >= y3-10 && Posicion_Y_Bola <= yM2 && Posicion_X_Bola >= x1 && Posicion_X_Bola <= x2) || 
+                    (Posicion_Y_Bola >= y3-10 && Posicion_Y_Bola <= y6 && Posicion_X_Bola >= x2-10 && Posicion_X_Bola <= x5) || 
+                    (Posicion_Y_Bola >= y5-10 && Posicion_Y_Bola <= y6 && Posicion_X_Bola >= x5 && Posicion_X_Bola <= x7) ||
+                    (Posicion_Y_Bola <= y3 && Posicion_X_Bola >= x6-10 && Posicion_X_Bola <= x8) ||
+                    (Posicion_Y_Bola >= y5-10 && Posicion_Y_Bola <= y10 && Posicion_X_Bola >= x7-10 && Posicion_X_Bola <= x9) ||
+                    (Posicion_Y_Bola >= y9-10 && Posicion_Y_Bola <= y10 && Posicion_X_Bola >= x4-10 && Posicion_X_Bola <= x7) ||
+                    (Posicion_Y_Bola >= y9-10 && Posicion_Y_Bola <= y10 && Posicion_X_Bola >= x10 && Posicion_X_Bola <= x14) ||
+                    (Posicion_Y_Bola >= y2-10 && Posicion_Y_Bola <= y10 && Posicion_X_Bola >= x9-10 && Posicion_X_Bola <= x10) ||
+                    (Posicion_Y_Bola >= y2-10 && Posicion_Y_Bola <= y3 && Posicion_X_Bola >= x10 && Posicion_X_Bola <= x13) ||
+                    (Posicion_Y_Bola >= y2-10 && Posicion_Y_Bola <= y6 && Posicion_X_Bola >= x13-10 && Posicion_X_Bola <= x14) ||
+                    (Posicion_Y_Bola >= y4-10 && Posicion_Y_Bola <= y8 && Posicion_X_Bola >= x11-10 && Posicion_X_Bola <= x12) ||
+                    (Posicion_Y_Bola >= y7-10 && Posicion_Y_Bola <= y8 && Posicion_X_Bola >= x12 && Posicion_X_Bola <= x15) ||
+                    (Posicion_Y_Bola >= y12-10 && Posicion_Y_Bola <= y13 && Posicion_X_Bola >= x3 && Posicion_X_Bola <= x5) ||
+                    (Posicion_Y_Bola >= y12-10 && Posicion_X_Bola >= x1 && Posicion_X_Bola <= x3) ||
+                    (Posicion_Y_Bola >= y11-10 && Posicion_X_Bola >= x4-10 && Posicion_X_Bola <= x15));
+endmodule
