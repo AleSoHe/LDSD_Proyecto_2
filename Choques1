@@ -1,0 +1,27 @@
+`timescale 1ns / 1ps
+
+module Choques1(
+    input [9:0]Posicion_X_Bola,
+    input [8:0]Posicion_Y_Bola,
+    
+    output Choque
+    );
+    
+      localparam IN_AR = 143;
+      localparam IN_AB = 269;
+      localparam PRI_AR = 168;
+      localparam PRI_AB = 244;
+      localparam TER_AR = 287;
+      localparam TER_AB = 337;
+      localparam IN_I = 67;
+      localparam IN_D = 182;
+      localparam SEG_D = 372;
+      localparam SEG_I = 312;
+      localparam MET_I = 552;
+      localparam MET_D = 567;
+      
+      assign Choque = (Posicion_Y_Bola <= IN_AR || Posicion_X_Bola <= IN_I || ((Posicion_X_Bola + 10) >= IN_D && Posicion_Y_Bola <= PRI_AR) || 
+                      ((Posicion_X_Bola + 10) >= IN_D && (Posicion_Y_Bola + 10) >= PRI_AB && Posicion_X_Bola <= SEG_I) || 
+                      ((Posicion_Y_Bola + 10) >= IN_AB && Posicion_X_Bola <= SEG_I) || ((Posicion_X_Bola + 10) >= SEG_D && Posicion_Y_Bola <= TER_AR) || 
+                      (Posicion_Y_Bola + 10) >= TER_AB || (Posicion_X_Bola + 10) >= MET_D);
+endmodule
