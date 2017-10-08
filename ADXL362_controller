@@ -1,0 +1,300 @@
+`timescale 1ns / 1ps
+
+module ADXL362_controller(
+    input clk,              // clk de FPGA 100 MHz
+    input MISO,             // Master In Slave Out: cable de datos del acelerómetro hacia la FPGA
+    input INT1,             // 
+    input INT2,             // Tal vez no se necesiten los INT 1 y 2
+    output MOSI,            // Master Out Slave In: cable de datos de la FPGA hacia el acelerómetro
+    output CSN,             // Chip select del acelerómetro
+    output SCLK,            // Reloj para control del acelerómetro
+    output [7:0] datosX,   // salida temporal para ver datos del acelerómetro en los leds de la FPGA
+    output [7:0] datosY
+    );
+    
+    
+    reg MISO_reg;
+    reg MOSI_reg;
+    
+    reg CSN_reg = 1'b1;         // Chip select inicializado en 1 (no seleccionado)
+
+    reg SCLK_EN_reg = 1'b0;     // Parámetro para habilitar la salida del reloj hacia el acelerómetro
+    wire SCLK_EN;               
+    
+    wire clk_10;                // clk a 10 MHz
+    
+///////////////////////////////////////////////
+///////    DIVISOR DE RELOJ EN DIEZ    ////////
+///////////////////////////////////////////////
+                                            ///
+    // Variables de divisor de reloj        ///
+    reg clk_10_reg;                         ///
+    reg [6:0] count_clk;                    ///
+                                            ///
+    always @(posedge clk) begin             ///
+                                            ///
+        if (count_clk < 99)                  ///
+            count_clk <= count_clk + 1;     ///
+        else begin                          ///
+            count_clk <= 0;                 ///
+        end                                 ///
+    end                                     ///
+                                            ///
+    always @* begin                         ///
+        if (count_clk < 50)                  ///
+            clk_10_reg <= 1;                ///
+        else                                ///
+            clk_10_reg <= 0;                ///
+    end                                     ///
+                                            ///
+    assign clk_10 = clk_10_reg;             ///
+    assign SCLK = clk_10 & SCLK_EN;         ///
+                                            ///
+                                            ///
+///////////////////////////////////////////////
+  
+  
+reg [7:0] instruccion;      // Instrucción que va hacia el acelerómetro (escritura o lectura)
+reg [7:0] dir_registro;     // Dirección del registro que se quiere leer o sobre el cual se quiere escribir
+reg [7:0] datos;            // Datos que se guardarán en el registro en caso de escritura
+
+reg [7:0] datosX;           // Registro para guardar los datos del eje X cuando se hace una lectura
+reg [7:0] datosY;           // Registro para guardar los datos del eje Y cuando se hace una lectura
+
+
+reg [3:0] instr_count = 4'b0000;    // Contador de instrucción para realizar la configuración y lectura de datos del acelerómetro 
+                                    // De 0 a 7 se realiza la configuración (escritura en registros) y el 8 es lectura de registros
+
+
+//////////////////////////////////////////      "ROM" con las instrucciones, direcciones de registros y datos a 
+//// Instrucciones, direcciones y datos //  almacenar o leer en el acelerómetro
+//////////////////////////////////////////
+                                        //
+always @ (instr_count)                  //
+    case (instr_count)                  // Evalúa el contador de instrucciones (De 0 a 7 se configura el acelerómetro, y instr_count = 8 es para leer datos)                   
+         4'd0:                          //
+            begin                       //
+                instruccion <= 8'h0a;   // Instruccion de escritura
+                dir_registro <= 8'h20;  // Dirección de registro
+                datos <= 8'hfa;         // Datos a almacenar en el registro
+            end                         //
+        4'd1:                           //
+            begin                       //
+                instruccion <= 8'h0a;   //
+                dir_registro <= 8'h21;  //
+                datos <= 8'h00;         //
+            end                         //
+        4'd2:                           //
+            begin                       //                           
+                instruccion <= 8'h0a;   //
+                dir_registro <= 8'h23;  //
+                datos <= 8'h96;         //  
+            end                         //
+        4'd3:                           //
+            begin                       //
+                instruccion <= 8'h0a;   //
+                dir_registro <= 8'h24;  //
+                datos <= 8'h00;         //
+            end                         //
+        4'd4:                           //
+            begin                       //
+                instruccion <= 8'h0a;   //
+                dir_registro <= 8'h25;  //
+                datos <= 8'h1e;         //
+            end                         //
+        4'd5:                           //
+            begin                       //    
+                instruccion <= 8'h0a;   //
+                dir_registro <= 8'h27;  //
+                datos <= 8'h3f;         //
+            end                         //
+        4'd6:                           //
+            begin                       //
+                instruccion <= 8'h0a;   //
+                dir_registro <= 8'h2b;  //
+                datos <= 8'h40;         //
+            end                         //    
+        4'd7:                           // 
+            begin                       //
+                instruccion <= 8'h0a;   //  
+                dir_registro <= 8'h2c;  //
+                datos <= 8'h13;         //
+            end                         //
+        4'd8:                           // 
+            begin                       //
+                instruccion <= 8'h0a;   //  
+                dir_registro <= 8'h2d;  //
+                datos <= 8'h0a;         //
+            end                         //
+        4'd9:                           // Instrucción para leer datos del acelerómetro
+            begin                       //
+                instruccion <= 8'h0b;   // instrucción de lectura
+                dir_registro <= 8'h08;  // registro de datos eje X
+            end                         //
+        4'd10:                          // Instrucción para leer datos del acelerómetro
+            begin                       //
+                instruccion <= 8'h0b;   // instrucción de lectura
+                dir_registro <= 8'h09;  // registro de datos eje Y
+            end                         //
+                                        //
+    endcase                             //
+//////////////////////////////////////////
+    
+reg [4:0] clk_10_count = 5'b00000;
+      
+      
+//////////////////////////////////////////////////////
+/////  CONFIGURACIÓN Y LECTURA DEL ACELERÓMETRO  /////
+////////////////////////////////////////////////////// 
+                                                    //     
+always @(negedge clk_10) begin                      //
+                                                    /////////////////////////////////////////
+    if (instr_count < 9) begin                      //   CONFIGURACIÓN del acelerómetro   ///
+                                                    /////////////////////////////////////////
+        case (clk_10_count)                         // 
+                                                    //
+            5'd0: CSN_reg <= 0;                     // Habilitación de chip 
+            5'd1:                                   //
+                begin                               //
+                    MOSI_reg <= instruccion[7];     //
+                    SCLK_EN_reg <= 1;               // Habilitación del reloj de salida
+                end                                 //
+            5'd2: MOSI_reg <= instruccion[6];       // Se envían los bits de instrucción, dirección y datos al acelerómetro
+            5'd3: MOSI_reg <= instruccion[5];       //
+            5'd4: MOSI_reg <= instruccion[4];       //
+            5'd5: MOSI_reg <= instruccion[3];       //
+            5'd6: MOSI_reg <= instruccion[2];       //
+            5'd7: MOSI_reg <= instruccion[1];       //
+            5'd8: MOSI_reg <= instruccion[0];       //
+            5'd9: MOSI_reg <= dir_registro[7];      //
+            5'd10: MOSI_reg <= dir_registro[6];     //
+            5'd11: MOSI_reg <= dir_registro[5];     //
+            5'd12: MOSI_reg <= dir_registro[4];     //
+            5'd13: MOSI_reg <= dir_registro[3];     //
+            5'd14: MOSI_reg <= dir_registro[2];     //
+            5'd15: MOSI_reg <= dir_registro[1];     //
+            5'd16: MOSI_reg <= dir_registro[0];     //
+            5'd17: MOSI_reg <= datos[7];            //
+            5'd18: MOSI_reg <= datos[6];            //
+            5'd19: MOSI_reg <= datos[5];            //
+            5'd20: MOSI_reg <= datos[4];            //
+            5'd21: MOSI_reg <= datos[3];            //
+            5'd22: MOSI_reg <= datos[2];            //
+            5'd23: MOSI_reg <= datos[1];            //
+            5'd24: MOSI_reg <= datos[0];            // Escritura del último bit
+            5'd25:                                  //
+                begin                               //
+                    SCLK_EN_reg <= 0;               // Habilitación del reloj de salida
+                    CSN_reg <= 1;                   // Deshabilitación de chip
+                end                                 //
+            5'd31: instr_count <= instr_count + 1;  // Se pasa el contador de instrucción a la siguiente instrucción "PC = PC + 1"
+                                                    //
+        endcase                                     //    
+                                                    //
+        clk_10_count <= clk_10_count + 1;           //  Se aumenta la cuenta del clk y se reinicia cuando llega a 31 + 1
+                                                    //
+        end                                         //
+                                                    //////////////////////////////////////
+    if (instr_count == 9) begin                     //   LECTURA de datos en registros  //
+                                                    //////////////////////////////////////
+                                                    //
+        case (clk_10_count)                         // Falta default
+                                                    //
+            5'd0: CSN_reg <= 0;                     // Habilitación de chip 
+            5'd1:                                   //
+                    begin                           //    
+                        MOSI_reg <= instruccion[7]; //
+                        SCLK_EN_reg <= 1;           // Habilitación del reloj de salida
+                    end                             //    
+            5'd2: MOSI_reg <= instruccion[6];       //
+            5'd3: MOSI_reg <= instruccion[5];       //
+            5'd4: MOSI_reg <= instruccion[4];       //
+            5'd5: MOSI_reg <= instruccion[3];       //
+            5'd6: MOSI_reg <= instruccion[2];       //
+            5'd7: MOSI_reg <= instruccion[1];       //
+            5'd8: MOSI_reg <= instruccion[0];       //
+            5'd9: MOSI_reg <= dir_registro[7];      //
+            5'd10: MOSI_reg <= dir_registro[6];     //
+            5'd11: MOSI_reg <= dir_registro[5];     //
+            5'd12: MOSI_reg <= dir_registro[4];     //
+            5'd13: MOSI_reg <= dir_registro[3];     //
+            5'd14: MOSI_reg <= dir_registro[2];     //
+            5'd15: MOSI_reg <= dir_registro[1];     //
+            5'd16: MOSI_reg <= dir_registro[0];     //
+            5'd17: datosX[7] <= MISO;           //
+            5'd18: datosX[6] <= MISO;           //  
+            5'd19: datosX[5] <= MISO;           //
+            5'd20: datosX[4] <= MISO;           //    
+            5'd21: datosX[3] <= MISO;           //
+            5'd22: datosX[2] <= MISO;           //
+            5'd23: datosX[1] <= MISO;           //
+            5'd24: datosX[0] <= MISO;           //  NOTA: si se mantiene el SCLK, se puede hacer un BURST READ para leer los datos de Y y Z en una sola lectura
+            5'd25:                                  //            pero también hay que aumentar la cantidad de bits de clk_10_count a 6
+                begin                               //
+                    instr_count <= instr_count+1;   //
+                    SCLK_EN_reg <= 0;               // Habilitación del reloj de salida
+                    CSN_reg <= 1;                   // Deshabilitación de chip  
+                end                                 //
+                                                    //
+        endcase                                     //                
+        clk_10_count <= clk_10_count + 1;           // Se aumenta la cuenta del clk y se reinicia cuando llega a 31 + 1
+                                                    //    
+        end                                         //
+                                                    //////////////////////////////////////
+    if (instr_count == 10) begin                     //   LECTURA de datos en registros  //
+                                                    //////////////////////////////////////
+                                                    //
+        case (clk_10_count)                         // Falta default
+                                                    //
+            5'd0: CSN_reg <= 0;                     // Habilitación de chip 
+            5'd1:                                   //
+                    begin                           //    
+                        MOSI_reg <= instruccion[7]; //
+                        SCLK_EN_reg <= 1;           // Habilitación del reloj de salida
+                    end                             //    
+            5'd2: MOSI_reg <= instruccion[6];       //
+            5'd3: MOSI_reg <= instruccion[5];       //
+            5'd4: MOSI_reg <= instruccion[4];       //
+            5'd5: MOSI_reg <= instruccion[3];       //
+            5'd6: MOSI_reg <= instruccion[2];       //
+            5'd7: MOSI_reg <= instruccion[1];       //
+            5'd8: MOSI_reg <= instruccion[0];       //
+            5'd9: MOSI_reg <= dir_registro[7];      //
+            5'd10: MOSI_reg <= dir_registro[6];     //
+            5'd11: MOSI_reg <= dir_registro[5];     //
+            5'd12: MOSI_reg <= dir_registro[4];     //
+            5'd13: MOSI_reg <= dir_registro[3];     //
+            5'd14: MOSI_reg <= dir_registro[2];     //
+            5'd15: MOSI_reg <= dir_registro[1];     //
+            5'd16: MOSI_reg <= dir_registro[0];     //
+            5'd17: datosY[7] <= MISO;               //
+            5'd18: datosY[6] <= MISO;               //  
+            5'd19: datosY[5] <= MISO;               //
+            5'd20: datosY[4] <= MISO;               //    
+            5'd21: datosY[3] <= MISO;               //
+            5'd22: datosY[2] <= MISO;               //
+            5'd23: datosY[1] <= MISO;               //
+            5'd24: datosY[0] <= MISO;               //  NOTA: si se mantiene el SCLK, se puede hacer un BURST READ para leer los datos de Y y Z en una sola lectura
+            5'd25:                                  //            pero también hay que aumentar la cantidad de bits de clk_10_count a 6
+                begin                               //
+                    instr_count <= instr_count-1;   //
+                    SCLK_EN_reg <= 0;               // Habilitación del reloj de salida
+                    CSN_reg <= 1;                   // Deshabilitación de chip  
+                end                                 //
+                                                    //
+        endcase                                     //                
+        clk_10_count <= clk_10_count + 1;           // Se aumenta la cuenta del clk y se reinicia cuando llega a 31 + 1
+                                                    //    
+        end                                         //    
+                                                    //
+    end                                             //
+//////////////////////////////////////////////////////
+
+// Asignación de wires a registros
+assign MOSI = MOSI_reg;
+assign MISO = MISO_reg;
+assign CSN = CSN_reg;
+assign SCLK_EN = SCLK_EN_reg;
+ 
+                        
+endmodule
