@@ -1,0 +1,157 @@
+`timescale 1ns / 1ps
+
+module Laberintos(
+      input [9:0] pixel_x, 
+      input [8:0] pixel_y,
+      input CS1,
+      input CS2,
+      input CS3,
+      
+      output reg Borde_on,
+      output reg Lab_on,
+      output reg Meta_on
+      );
+
+      wire borde_on;
+      wire lab1_on;
+      wire lab2_on;
+      wire lab3_on;
+      wire meta1_on;
+      wire meta2_on;
+      wire meta3_on;
+        
+      ///////Laberinto 1/////////
+      localparam IN_AR = 143;
+      localparam IN_AB = 269;
+      localparam PRI_AR = 168;
+      localparam PRI_AB = 244;
+      localparam TER_AR = 287;
+      localparam TER_AB = 337;
+      
+      localparam IN_I = 67;
+      localparam IN_D1 = 182;
+      localparam IN_D2 = 182;
+      localparam SEG_D = 372;
+      localparam SEG_I = 312;
+      
+      localparam MET_I = 552;
+      localparam MET_D = 567;
+      ////////////////////////////
+      
+      ////////Laberinto 2/////////
+      localparam X1 = 84;
+      localparam X2 = 114;
+      localparam X3 = 405;
+      localparam X4 = 440;
+      localparam X5 = 475;
+      localparam X6 = 555;
+      
+      
+      localparam Y1 = 85;
+      localparam Y2 = 152;
+      localparam Y3 = 187;
+      localparam Y4 = 222;
+      localparam Y5 = 257;
+      localparam Y6 = 292;
+      localparam Y7 = 327;
+      localparam Y8 = 394;
+      
+      localparam Mx1 = 149;
+      localparam Mx2 = 164;
+      //////////////////////////////
+  
+       ///////Laberinto 3////////////
+       
+       localparam x1 = 67;
+       localparam x2 = 117;
+       localparam x3 = 122;
+       localparam x4 = 172;
+       localparam x5 = 239;
+       localparam x6 = 274;
+       localparam x7 = 305;
+       localparam x8 = 320;
+       localparam x9 = 355;
+       localparam x10 = 395;
+       localparam x11 = 430;
+       localparam x12 = 462;
+       localparam x13 = 497;
+       localparam x14 = 537;
+       localparam x15 = 572;
+       
+       localparam y1 = 68;
+       localparam y2 = 103;
+       localparam y3 = 118;
+       localparam y4 = 153;
+       localparam y5 = 153;
+       localparam y6 = 220;
+       localparam y7 = 255;
+       localparam y8 = 270;
+       localparam y9 = 305;
+       localparam y10 = 335;
+       localparam y11 = 360;
+       localparam y12 = 205;
+       localparam y13 = 235;
+       localparam y14 = 395;
+       
+       localparam yM1 = 143;
+       localparam yM2 = 128;       
+       ///////////////////////////
+       
+       assign borde_on = (pixel_x <= 62) || (pixel_x >= 577) || (pixel_y <= 63) || (pixel_y >= 417);
+       
+       assign lab1_on = ((pixel_x >= IN_I && pixel_x <= IN_D1 && pixel_x <= IN_D2) && (pixel_y >= IN_AR && pixel_y <= IN_AB)) ||
+                          ((pixel_x >= IN_D1 && pixel_x >= IN_D2 && pixel_x <= SEG_D) && (pixel_y >= PRI_AR && pixel_y <= PRI_AB)) ||
+                          ((pixel_x >= SEG_I && pixel_x <= SEG_D) && (pixel_y >= PRI_AR && pixel_y <= TER_AB)) ||
+                          ((pixel_x >= SEG_I && pixel_x <= MET_I) && (pixel_y >= TER_AR && pixel_y <= TER_AB));
+       
+       assign meta1_on = ((pixel_x >= MET_I && pixel_x <= MET_D) && (pixel_y >= TER_AR && pixel_y <= TER_AB));
+       
+       assign lab2_on = ((pixel_x >= X1 && pixel_x <= X5 && pixel_y >= Y1 && pixel_y <= Y2) ||
+                           (pixel_x >= X5 && pixel_x <= X6 && pixel_y >= Y1 && pixel_y <= Y8) ||
+                           (pixel_x >= X2 && pixel_x <= X5 && pixel_y >= Y7 && pixel_y <= Y8) ||
+                           (pixel_x >= X1 && pixel_x <= X2 && pixel_y >= Y3 && pixel_y <= Y8) ||
+                           (pixel_x >= X2 && pixel_x <= X3 && pixel_y >= Y3 && pixel_y <= Y4) ||
+                           (pixel_x >= X3 && pixel_x <= X4 && pixel_y >= Y3 && pixel_y <= Y6) || 
+                           (pixel_x >= Mx2 && pixel_x <= X4 && pixel_y >= Y5 && pixel_y <= Y6)
+                           );
+                     
+       assign meta2_on = (pixel_x >= Mx1 && pixel_x <= Mx2 && pixel_y >= Y5 && pixel_y <= Y6);
+       
+       assign lab3_on = ((pixel_x >= x1 && pixel_x <= x6 && pixel_y >= y1 && pixel_y <= y3) || (pixel_x >= x5 && pixel_x <= x9 && pixel_y >= y3 && pixel_y <= y5)   ||
+                         (pixel_x >= x8 && pixel_x <= x9 && pixel_y >= y1 && pixel_y <= y3) || (pixel_x >= x8 && pixel_x <= x15 && pixel_y >= y1 && pixel_y <= y2)  ||
+                        (pixel_x >= x14 && pixel_x <= x15 && pixel_y >= y1 && pixel_y <= y7)|| (pixel_x >= x12 && pixel_x <= x15 && pixel_y >= y6 && pixel_y <= y7) ||
+                        (pixel_x >= x12 && pixel_x <= x13 && pixel_y >= y3 && pixel_y <= y6)|| (pixel_x >= x10 && pixel_x <= x12 && pixel_y >= y3 && pixel_y <= y4) ||
+                        (pixel_x >= x10 && pixel_x <= x11 && pixel_y >= y3 && pixel_y <= y9)|| (pixel_x >= x11 && pixel_x <= x15 && pixel_y >= y8 && pixel_y <= y9) ||
+                       (pixel_x >= x14 && pixel_x <= x15 && pixel_y >= y8 && pixel_y <= y11)|| (pixel_x >= x4 && pixel_x <= x14 && pixel_y >= y10 && pixel_y <= y11)||
+                       (pixel_x >= x3 && pixel_x <= x4 && pixel_y >= y8 && pixel_y <= y14)  || (pixel_x >= x4 && pixel_x <= x5 && pixel_y >= y8 && pixel_y <= y9)   ||
+                       (pixel_x >= x5 && pixel_x <= x7 && pixel_y >= y12 && pixel_y <= y9)  || (pixel_x >= x2 && pixel_x <= x5 && pixel_y >= y12 && pixel_y <= y13) ||
+                       (pixel_x >= x1 && pixel_x <= x2 && pixel_y >= yM1 && pixel_y <= y13));
+                  
+                  
+       assign meta3_on = ((pixel_x >= x1 && pixel_x <= x2) && (pixel_y >= yM2 && pixel_y <= yM1));
+      
+     
+      always @*
+      begin
+           if (~CS1)
+           begin
+                Lab_on = lab1_on;
+                Meta_on = meta1_on;
+           end
+           else if (~CS2)
+           begin
+                Lab_on = lab2_on;
+                Meta_on = meta2_on;
+           end
+           else if (~CS3)
+           begin
+               Lab_on = lab3_on;
+               Meta_on = meta3_on;
+           end
+           else
+               Lab_on = 1'b0;
+               Meta_on = 1'b0;
+           Borde_on = borde_on; 
+      end
+             
+endmodule
