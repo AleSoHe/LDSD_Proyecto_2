@@ -1,0 +1,58 @@
+`timescale 1ns / 1ps
+
+module Enemigos3(
+    input [9:0]Pix_X,
+    input [8:0]Pix_Y,
+    input CS,
+    input Reset,
+    
+    output reg Enemigos_ON,
+    
+    output reg [9:0]Posicion_X,
+    output reg [8:0]Posicion_Y
+  
+    );
+     
+
+//////////////////////////////////////////////////////////
+//////////        MOVIMIENTO DE ENEMIGO        /////////// 
+//////////////////////////////////////////////////////////
+                                                        //
+                                                        //
+    wire refr_tick;                                     //         
+    assign refr_tick = (Pix_Y== 509) && (Pix_X==0);     //
+                                                        //
+    always @ (posedge refr_tick) begin                  //
+        if(CS || Reset)begin                            //
+            Posicion_Y <= 250;                          //      
+            Posicion_X <= 239;                          //   
+                                                        //      
+        end                                             //
+        else if(~CS)begin                               //
+            Posicion_X <= Posicion_X + 1'b1;            //
+        end                                             //
+    end                                                 //
+                                                        //                         
+                                                        //
+ ///////////////////////////////////////////////////////// 
+ 
+ 
+ 
+ ////////////////////////////////////////////////////////////////
+ /////////////        Desplegar Enemigos       ////////////////// 
+ ////////////////////////////////////////////////////////////////
+                                                               //  
+                                                               //
+always @*                                                      //  
+    begin                                                      //
+        if((Pix_X >= Posicion_X && Pix_X <= Posicion_X + 10)   //
+        && (Pix_Y >= Posicion_Y && Pix_Y <= Posicion_Y + 10))//
+            begin                                              //
+                Enemigos_ON <= 1'd1;                           //
+            end                                                //
+        else                                                   //
+            Enemigos_ON <= 1'd0;                               //
+    end                                                        //
+/////////////////////////////////////////////////////////////////
+    
+endmodule
