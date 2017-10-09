@@ -1,0 +1,201 @@
+`timescale 1ns / 1ps
+
+
+module despliegue_menu(
+    input clk,
+    input CS,
+    input [4:0] pixel_y,
+    input [9:0] pixel_x,
+    input [7:0] row_data,
+    input [2:0] boton,
+    output reg [6:0] char_addr,
+    output reg [2:0] RGB,
+    output [1:0] nivel,
+    output flanco_seleccion
+    );
+
+//////////////////////////////////////////////    
+//      CONTROL DE BOTONES Y SELECCIÓN      //
+//                 DE NIVEL                 //
+//////////////////////////////////////////////////////////
+                                                        //
+reg [1:0] selector = 2'b01;                             //
+wire or_botones;                                        //
+assign or_botones = boton[0] | boton[1] | boton[2];     //                
+                                                        //
+                                                        //
+                                                        //
+always @(posedge or_botones)//, posedge CS)         //
+begin                                                   //
+                                                        //                                                                                                                                          //
+    if(CS == 1'b0)                                      //
+    begin                                               //
+        case (boton)                                    //
+                                                        //
+            3'b001:                                     // botón arriba
+            begin                                       //
+                if (selector != 2'b01)                  //
+                    selector <= selector - 1'b1;        //
+            end                                         //
+                                                        //
+            /*3'b010:                                     //
+            begin                                       //
+                                       // botón centro (selección de nivel) 
+                selector <= 2'b01;                      //        
+            end*/                                         //    
+            3'b100:                                     // botón abajo  
+            begin                                       //        
+                if (selector != 2'b11)                  //
+                    selector <= selector + 1'b1;        //
+            end                                         //
+                                                        //
+            default:                                    //
+                begin                                   //
+                    selector <= selector;               // 
+                end                                     //    
+                                                        //
+        endcase                                         //
+    end                 
+    else 
+    begin
+        selector <= 2'b01;                             //        
+    end
+end                                                     //
+                                                        //  
+//////////////////////////////////////////////////////////
+
+assign nivel = selector;
+
+assign flanco_seleccion = boton[1] & (~CS);
+    
+
+//////////////////////////////////////////////
+//          DESPLIEGUE DE TEXTO             //
+//////////////////////////////////////////////
+                                            //////////////
+wire [1:0] num = 2'b10;                                 //
+wire [11:0] tile_addr; 
+reg [11:0] tile_addr_reg;   
+
+always @*
+    begin
+    //if (CS == 1'b0)                                                     
+        tile_addr_reg <= {pixel_y[4:1],2'b00, pixel_x[9:4]};  
+    
+    //else
+        //tile_addr_reg = 12'h000;
+    end
+
+assign tile_addr = tile_addr_reg; 
+                                                        //
+always @* begin                                         //
+                                                        //
+    case (tile_addr)                                    //
+                
+                                                        //
+        12'h30e: char_addr <= 7'h53;                    // S
+        12'h30f: char_addr <= 7'h43;                    // C
+        12'h310: char_addr <= 7'h41;                    // A
+        12'h311: char_addr <= 7'h52;                    // R
+        12'h312: char_addr <= 7'h59;                    // Y
+        12'h313: char_addr <= 7'h00;                    //
+        12'h316: char_addr <= 7'h4d;                    // M                
+        12'h317: char_addr <= 7'h41;                    // A
+        12'h318: char_addr <= 7'h5a;                    // Z
+        12'h319: char_addr <= 7'h45;                    // E
+                
+        12'h710: char_addr <= 7'h4e;                    // N
+        12'h711: char_addr <= 7'h69;                    // i
+        12'h712: char_addr <= 7'h76;                    // v
+        12'h713: char_addr <= 7'h65;                    // e
+        12'h714: char_addr <= 7'h6c;                    // l    
+        12'h715: char_addr <= 7'h00;                    //
+        12'h716: char_addr <= 7'h31;                    // 1
+                                            
+        12'h910: char_addr <= 7'h4e;                    // N
+        12'h911: char_addr <= 7'h69;                    // i
+        12'h912: char_addr <= 7'h76;                    // v
+        12'h913: char_addr <= 7'h65;                    // e
+        12'h914: char_addr <= 7'h6c;                    // l      
+        12'h915: char_addr <= 7'h00;                    //
+        12'h916: char_addr <= 7'h32;                    // 2
+                        
+        12'hb10: char_addr <= 7'h4e;                    // N
+        12'hb11: char_addr <= 7'h69;                    // i
+        12'hb12: char_addr <= 7'h76;                    // v
+        12'hb13: char_addr <= 7'h65;                    // e
+        12'hb14: char_addr <= 7'h6c;                    // l 
+        12'hb15: char_addr <= 7'h00;                    // 
+        12'hb16: char_addr <= 7'h33;                    // 3
+       
+        default: char_addr <= 7'h00;                    // Default: espacio (negro)
+                                                        //
+    endcase                                             //
+end                                                     //
+//////////////////////////////////////////////////////////
+// Multiplexado de row_data
+
+reg font_bit_reg;
+wire font_bit;
+
+always @(negedge clk)
+begin
+    case (pixel_x[3:1])  //(3:1)   
+        3'h0: font_bit_reg <= row_data[7];
+        3'h1: font_bit_reg <= row_data[6];
+        3'h2: font_bit_reg <= row_data[5];
+        3'h3: font_bit_reg <= row_data[4];
+        3'h4: font_bit_reg <= row_data[3];
+        3'h5: font_bit_reg <= row_data[2];
+        3'h6: font_bit_reg <= row_data[1];
+        3'h7: font_bit_reg <= row_data[0];
+    endcase
+end
+
+assign font_bit = font_bit_reg;
+
+//////////////////////////////////////////////
+////////     Asignación de RGB     ///////////
+//////////////////////////////////////////////
+                                            //
+always @(negedge clk)                       //
+begin                                       //
+    if (font_bit & ~CS)                  //
+    begin                                   //
+        if (pixel_y[4:1] == 4'h7)           //
+        begin                               //
+            if (selector == 2'b01)          //
+                RGB <= 3'b101;              //
+            else                            //
+                RGB <= 3'b111;              //
+        end                                 //    
+        
+        else if (pixel_y[4:1] == 4'h9)      //
+        begin                               //
+            if (selector == 2'b10)          //
+                RGB <= 3'b101;              //
+            else                            //
+                RGB <= 3'b111;              //
+        end                                 //
+                                            //
+        else if (pixel_y[4:1] == 4'hb)      //
+        begin                               //
+            if (selector == 2'b11)          //   
+                RGB <= 3'b101;              //
+            else                            //
+                RGB <= 3'b111;              //    
+        end                                 //
+        else if (pixel_y[4:1] == 4'h3)      //
+            RGB <= 3'b001;                  //
+        else                                //
+            RGB <= 3'b000;                  //
+                                            //
+    end                                     //
+    else if ((pixel_y[4:0] == 5'h05 | pixel_y[4:0] == 5'h08) & (pixel_x[0] == 1'b1))
+        RGB <= 3'b001;                      //
+    else                                    //
+        RGB <= 3'b000;                      //
+end                                         //
+//////////////////////////////////////////////
+
+endmodule
