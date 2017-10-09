@@ -1,0 +1,48 @@
+`timescale 1ns / 1ps
+
+module menu(
+    input clk,
+    input [2:0] boton,      // 3 Botones de la FPGA
+    input [9:0] pixel_x,    // Señal de posición en x
+    input [8:0] pixel_y,    // Señal de posición en y  
+    input CS,   
+                // Datos del acelerómetro en Y
+    output [2:0] RGB,       // Salida RGB
+    output [1:0] nivel,       // Salida hacia el módulo dec control: nivel escogido 
+    output flanco_seleccion
+    );
+    
+wire [6:0] char_addr;   // Dirección de caracter
+wire [10:0] addr;       
+wire [7:0] row_data;   
+
+assign addr = {char_addr, pixel_y[4:1]};    // pixel_y[3:0] es el row address 
+
+//////////////////////////////
+// Instancia del Font_ROM  ///
+//////////////////////////////
+                            //
+font_rom font_rom(          //
+    .clk(clk),              //
+    .addr(addr),            //
+    .data(row_data)         //
+);                          //
+//////////////////////////////
+            
+//////////////////////////////////////////
+//         Despliegue Menú              //   
+despliegue_menu despliegue_menu(        //
+    .clk(clk),                          //
+    .CS(CS),                            //
+    .pixel_y(pixel_y[8:4]),             //pixel_y[9:4] es todo lo que el módulo necesita para saber qué caracter desplegar
+    .pixel_x(pixel_x),                  //
+    .boton(boton),                      //
+    .row_data(row_data),                //
+    .char_addr(char_addr),              //
+    .nivel(nivel),                        //
+    .RGB(RGB),                          //
+    .flanco_seleccion(flanco_seleccion) //
+    );                                  //
+//////////////////////////////////////////
+    
+endmodule
